@@ -3,4 +3,23 @@
 shopt -s extglob
 LC_COLLATE=C
 
-
+while true
+do
+	select option in "Create Database" "List Database" "Connect to Database" "Drop Database"
+	do
+		case $option in
+			"Create Database")
+				echo "Option one"
+				;;
+			"List Database")
+				echo "Option two"
+				;;
+			"Connect to Database")
+				echo "Option three"
+				;;
+			"Drop Database")
+				echo "Option four"
+				;;
+		esac
+	done
+done
