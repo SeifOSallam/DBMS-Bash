@@ -3,7 +3,11 @@
 create_table() {
    
     DBName="$1"
-    tables=$(find Database/$DBName -type f)
+   # tables=$(find Database/$DBName -type f)
+    tables=$( ls Database/$DBName | grep -v "_metaData")
+    for file in $tables;do
+    echo $file
+    done
     i=0
     while true; do
             read -p "Enter the name of the table: " TableName
@@ -39,8 +43,8 @@ create_table() {
         read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
         if [ "$IsPrimaryKey" == "y" ]; then
            printf "pk \n">> "Database/$DBName/${TableName}_metaData"
-        else 
-           printf "\m"
+        #else 
+          # printf "\n"
         fi     
 
     done
@@ -59,14 +63,15 @@ drop_tables(){
         if [ "$TableName" == "$file" ];then
             rm Database/$DBName/$TableName 
             rm "Database/$DBName/${TableName}_metaData"
-            echo "Table $TableName cdroped successfully in $DBName database."
+            echo "Table $TableName droped successfully in $DBName database."
             break
         else
         echo "Table $TableName not exist"
+        break
         fi
     done
 }
 #create_table "MyDatabase"
 #list_tables "MyDatabase"
-#drop_tables "MyDatabase"
+drop_tables "MyDatabase"
 
