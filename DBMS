@@ -9,23 +9,22 @@ source DBFunc
 if [[ !(-e Database) ]];then
 	mkdir Database
 fi
-while true
+
+select option in "Create Database" "List Database" "Connect to Database" "Drop Database"
 do
-	select option in "Create Database" "List Database" "Connect to Database" "Drop Database"
-	do
-		case $option in
-			"Create Database")
-				echo "Option one"
-				;;
-			"List Database")
-				echo "Option two"
-				;;
-			"Connect to Database")
-				echo "Option three"
-				;;
-			"Drop Database")
-				echo "Option four"
-				;;
-		esac
-	done
+	case $option in
+		"Create Database")
+			echo "Option one"
+			;;
+		"List Database")
+			echo "Option two"
+			;;
+		"Connect to Database")
+			echo "Option three"
+			;;
+		"Drop Database")
+			echo "Option four"
+			;;
+	esac
 done
+
