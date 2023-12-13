@@ -8,14 +8,15 @@ create_table() {
     for file in $tables;do
     echo $file
     done
-    modifiedTableName=$(check_name $TableName)
-    echo $modifiedTableName
+    #output=$(check_name "$name") 
     while true; do
             read -p "Enter the name of the table: " TableName
-            if [[ $modifiedTableName != 1 ]]; then
+            modifiedTableName=$(check_name "$TableName")
+            echo $modifiedTableName
+            if [[ "$modifiedTableName" != "1" ]]; then
                 if [[ ! -e Database/$DBName/$modifiedTableName ]]; then
                     touch "Database/$DBName/$modifiedTableName"
-                    touch "Database/$DBName/${$modifiedTableName}_metaData"
+                    touch "Database/$DBName/${modifiedTableName}_metaData"
                     break
                 else
                     echo the table already exist
@@ -29,21 +30,21 @@ create_table() {
 
      for ((i = 1; i <= NumFields; i++)); do
         read -p "Enter the name of field $i: " FieldName
-        printf "$FieldName:" >> "Database/$DBName/${TableName}_metaData"
+        printf "$FieldName:" >> "Database/$DBName/${modifiedTableName}_metaData"
 
         read -p "Enter the datatype of field $i (string/int): " DataType
-        printf "$DataType:" >> "Database/$DBName/${TableName}_metaData"
+        printf "$DataType:" >> "Database/$DBName/${modifiedTableName}_metaData"
 
         read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
         if [ "$IsPrimaryKey" == "y" ]; then
-           printf "pk \n">> "Database/$DBName/${TableName}_metaData"
+           printf "pk \n">> "Database/$DBName/${modifiedTableName}_metaData"
         #else 
           # printf "\n"
         fi     
 
     done
 
-    echo "Table $TableName created successfully in $DBName database."
+    echo "Table $modifiedTableName created successfully in $DBName database."
 }
 list_tables() {
   DBName="$1"
