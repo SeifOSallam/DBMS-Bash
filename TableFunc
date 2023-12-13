@@ -55,7 +55,7 @@ list_tables() {
   DBName="$1"
   ls Database/$DBName | grep -v "_metaData"
 } 
-drop_tables(){
+drop_table(){
     DBName="$1"
     read -p "Enter the name of the table: " TableName
     tables=$( ls Database/$DBName | grep -v "_metaData")
@@ -73,5 +73,5 @@ drop_tables(){
 }
 #create_table "MyDatabase"
 #list_tables "MyDatabase"
-drop_tables "MyDatabase"
+#drop_tables "MyDatabase"
 

@@ -1,0 +1,153 @@
+#! /usr/bin/bash
+
+shopt -s extglob
+LC_COLLATE=C
+
+source TableFunc
+
+createDB() {
+	inputname=""
+	
+	while [[ $inputname == "" ]]
+	do
+		read -p "Enter the database name: " inputname
+		if [[ $inputname =~ " " ]]; then
+			inputname=""
+			printf "Please enter a valid name.\n"
+		fi
+	done
+	if [[ ! -e Database/$inputname ]];then 
+		mkdir Database/$inputname
+		printf $inputname" Database was created successfully.\n"
+	else
+		echo "Database already exists!"
+	fi
+	
+}
+
+listDB() {
+	files=$(ls Database)
+	for file in $files
+	do
+		if [[ -d Database/$file ]]; then
+			echo $file
+		fi
+	done
+}
+
+
+connectDB() {
+	databases=$(listDB)
+	printf "Enter the database\n"
+	read connectinput
+	connectexists=false
+	for db in $databases
+	do
+		if [[ $connectinput == $db ]];then
+			connectexists=true
+		fi
+	done
+	if [[ $connectexists == "true" ]]; then
+		printf "Connected to "$connectinput".\n"
+		while true
+		do
+			disconnectdb=false
+			select choice in "Create Table" "List Tables" "Drop Table" "Insert into Table" "Select From Table" "Delete From Table" "Update Table" "Disconnect DB" 
+			do
+				case $choice in
+					"Create Table")
+						##
+						create_table $connectinput
+						break
+						;;
+					"List Tables")
+						##
+						list_tables $connectinput
+						break
+						;;
+					 "Drop Table")
+						##
+						drop_table $connectinput
+						break
+						;;
+					 "Insert into Table" ) 
+						##
+						
+						;;
+					"Select From Table") 
+						##
+						
+						;;
+					 "Delete From Table") 
+						##
+						
+						;;
+					"Update Table") 
+						##
+						
+						;;
+					"Disconnect DB") 
+						##
+						disconnectdb=true
+						break
+						;;
+					"Exit")
+						disconnectdb=true
+						echo "Exiting..."
+						break
+						;;
+					*) 
+						echo $REPLY is not one of the choices.
+						break
+						;;
+				esac
+			done
+			if [[ $disconnectdb == "true" ]];then
+				break
+			fi
+		done
+	else
+		echo "The selected DB doesn't exist."
+	fi
+}
+
+dropDB() {
+	droppedname=""
+	while [[ $droppedname == "" || $droppedname =~ " " ]]
+	do
+		echo "Enter the name of the database you wish to drop"
+		read droppedname
+	done
+	
+	if [[ -e Database/$droppedname ]]; then
+		affirmativepick=false
+		dropthedb=false
+		while [[ $affirmativepick == "false" ]]
+		do
+			echo "Are you sure? (Y/N)"
+			read
+			case $REPLY in
+				@(y||Y) )
+					affirmativepick=true
+					dropthedb=true
+					;;
+				@(n||N) )
+					affirmativepick=true
+					;;
+			esac
+		done
+		if [[ $dropthedb == "true" ]]; then
+			rm -rf Database/$droppedname
+			printf "Database "$droppedname" was dropped with all its content.\n"
+		fi
+	else
+		echo "The selected database doesn't exist"
+	fi
+	
+}
+
+
+
+
+
+
