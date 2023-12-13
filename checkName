@@ -13,4 +13,4 @@ check_name () {
         ;;
     esac
 }
-read -p 
+

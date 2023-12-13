@@ -9,6 +9,7 @@ create_table() {
     done
     modifiedTableName=$(check_name $TableName)
     echo $modifiedTableName
+    modifiedTableName=0
     while true; do
             read -p "Enter the name of the table: " TableName
             if [[ $modifiedTableName != 1 ]]; then
@@ -36,8 +37,6 @@ create_table() {
         read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
         if [ "$IsPrimaryKey" == "y" ]; then
            printf "pk \n">> "Database/$DBName/${TableName}_metaData"
-        #else 
-          # printf "\n"
         fi     
 
     done
