@@ -40,24 +40,19 @@ connectDB() {
 	databases=$(listDB)
 	printf "Enter the database\n"
 	read connectinput
-	connectexists=false
-	for db in $databases
-	do
-		if [[ $connectinput == $db ]];then
-			connectexists=true
-		fi
-	done
-	if [[ $connectexists == "true" ]]; then
+	
+	if [[ -e Database/$connectinput ]]; then
+		clear
 		printf "Connected to "$connectinput".\n"
 		while true
 		do
 			disconnectdb=false
-			select choice in "Create Table" "List Tables" "Drop Table" "Insert into Table" "Select From Table" "Delete From Table" "Update Table" "Disconnect DB" 
+			select choice in "Create Table" "List Tables" "Drop Table" "Select Table" "Disconnect DB" 
 			do
 				case $choice in
 					"Create Table")
 						##
-						create_table $connectinput
+						create_table "$connectinput"
 						break
 						;;
 					"List Tables")
@@ -70,30 +65,15 @@ connectDB() {
 						drop_table $connectinput
 						break
 						;;
-					 "Insert into Table" ) 
+					"Select Table") 
 						##
-						
-						;;
-					"Select From Table") 
-						##
-						
-						;;
-					 "Delete From Table") 
-						##
-						
-						;;
-					"Update Table") 
-						##
-						
+						select_table $connectinput
+						break
 						;;
 					"Disconnect DB") 
 						##
 						disconnectdb=true
-						break
-						;;
-					"Exit")
-						disconnectdb=true
-						echo "Exiting..."
+						printf "Disconnecting from "$connectinput"...\n"
 						break
 						;;
 					*) 
