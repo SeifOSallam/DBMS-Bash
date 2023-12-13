@@ -1,12 +1,11 @@
 #! /usr/bin/bash
 source checkName
 create_table() {
-   
+   echo $1
     DBName="$1"
-   # tables=$(find Database/$DBName -type f)
     tables=$( ls Database/$DBName | grep -v "_metaData")
     for file in $tables;do
-    echo $file
+    	echo $file
     done
     modifiedTableName=$(check_name $TableName)
     echo $modifiedTableName
@@ -22,7 +21,7 @@ create_table() {
                 fi
             else
               echo "Invalid table name."
-           fi
+ 	    fi
     done
 
     read -p "Enter the number of fields: " NumFields
@@ -65,6 +64,57 @@ drop_table(){
         fi
     done
 }
+
+select_table() {
+	DBName=$1
+	printf "Enter table name: \n"
+	read tablename
+	if [[ -e Database/$DBName/$tablename ]];then
+		clear
+		printf "Connected to "$tablename"...\n"
+		while true
+		do
+			disconnecttable=false
+			select choice in "Select from Table" "Insert into Table" "Update Table" "Delete from Table" "Disconnect Table"
+			do
+				case $choice in
+					"Select from Table")
+						##
+						break
+						;;
+					"Insert into Table")
+						##
+						break
+						;;
+					"Update Table")
+						##
+						break
+						;;
+					"Delete from Table")
+						##
+						break
+						;;
+					"Disconnect Table")
+						disconnecttable=true
+                        printf "Disconnecting from "$tablename"...\n"
+						break
+						;;
+					*)
+						echo $REPLY is not one of the choices.
+				esac
+			done
+			if [[ $disconnecttable == "true" ]];then
+				break
+			fi
+		done
+	else
+		echo "This table does not exist."
+	fi	
+}
+
+
+
+
 #create_table "MyDatabase"
 #list_tables "MyDatabase"
 #drop_tables "MyDatabase"

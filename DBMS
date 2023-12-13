@@ -32,6 +32,10 @@ do
 				dropDB
 				break
 				;;
+			*)
+				echo $REPLY is not one of the choices.
+				break
+				;;
 		esac
 	done
 	
