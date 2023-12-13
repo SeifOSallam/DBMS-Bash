@@ -6,25 +6,33 @@ LC_COLLATE=C
 source DBFunc
 
 
-if [[ !(-e Database) ]];then
+if [[ ! -e "Database" ]];then
 	mkdir Database
 fi
 
-select option in "Create Database" "List Database" "Connect to Database" "Drop Database"
+while true
 do
-	case $option in
-		"Create Database")
-			echo "Option one"
-			;;
-		"List Database")
-			echo "Option two"
-			;;
-		"Connect to Database")
-			echo "Option three"
-			;;
-		"Drop Database")
-			echo "Option four"
-			;;
-	esac
-done
 
+	select option in "Create Database" "List Database" "Connect to Database" "Drop Database"
+	do
+		case $option in
+			"Create Database")
+				createDB
+				break
+				;;
+			"List Database")
+				listDB
+				break
+				;;
+			"Connect to Database")
+				connectDB
+				break
+				;;
+			"Drop Database")
+				dropDB
+				break
+				;;
+		esac
+	done
+	
+done
