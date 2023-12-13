@@ -1,5 +1,5 @@
 #! /usr/bin/bash
-
+source checkName
 create_table() {
    
     DBName="$1"
@@ -8,23 +8,17 @@ create_table() {
     for file in $tables;do
     echo $file
     done
-    i=0
+    modifiedTableName=$(check_name $TableName)
+    echo $modifiedTableName
     while true; do
             read -p "Enter the name of the table: " TableName
-            if [[ ! "$TableName" =~ ^[0-9] && ! "$TableName" =~ " " ]]; then
-               for file in $tables;do
-                   current_table=$(basename "$file")
-                    if [ "$TableName" == "$current_table" ];then
-                        echo the table already exist
-                        break
-                    else
-                        i=1
-                        touch "Database/$DBName/$TableName"
-                        touch "Database/$DBName/${TableName}_metaData"
-                        break
-                    fi
-                done
-                if [[ $i == 1 ]];then break
+            if [[ $modifiedTableName != 1 ]]; then
+                if [[ ! -e Database/$DBName/$modifiedTableName ]]; then
+                    touch "Database/$DBName/$modifiedTableName"
+                    touch "Database/$DBName/${$modifiedTableName}_metaData"
+                    break
+                else
+                    echo the table already exist
                 fi
             else
               echo "Invalid table name."
