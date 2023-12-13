@@ -1,0 +1,16 @@
+#! /usr/bin/bash
+shopt -s extglob
+export LC_COLLATE=C 
+check_name () {
+    case $1 in 
+        [a-zA-Z_][a-zA-Z0-9_]*)
+            result=$(tr -s ' ' '_' <<<"$1")
+            #echo "$1" | tr -s ' ' '_'
+            cho $result
+        ;;
+        *)
+            echo "1"
+        ;;
+    esac
+}
+read -p 
