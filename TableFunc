@@ -95,6 +95,7 @@ select_table() {
 						;;
 					"Update Table")
 						##
+                        update_table Database/$DBName/$tablename
 						break
 						;;
 					"Delete from Table")
