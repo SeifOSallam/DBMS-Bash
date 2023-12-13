@@ -1,0 +1,77 @@
+#! /usr/bin/bash
+
+create_table() {
+   
+    DBName="$1"
+   # tables=$(find Database/$DBName -type f)
+    tables=$( ls Database/$DBName | grep -v "_metaData")
+    for file in $tables;do
+    echo $file
+    done
+    i=0
+    while true; do
+            read -p "Enter the name of the table: " TableName
+            if [[ ! "$TableName" =~ ^[0-9] && ! "$TableName" =~ " " ]]; then
+               for file in $tables;do
+                   current_table=$(basename "$file")
+                    if [ "$TableName" == "$current_table" ];then
+                        echo the table already exist
+                        break
+                    else
+                        i=1
+                        touch "Database/$DBName/$TableName"
+                        touch "Database/$DBName/${TableName}_metaData"
+                        break
+                    fi
+                done
+                if [[ $i == 1 ]];then break
+                fi
+            else
+              echo "Invalid table name."
+           fi
+    done
+
+    read -p "Enter the number of fields: " NumFields
+
+     for ((i = 1; i <= NumFields; i++)); do
+        read -p "Enter the name of field $i: " FieldName
+        printf "$FieldName:" >> "Database/$DBName/${TableName}_metaData"
+
+        read -p "Enter the datatype of field $i (string/int): " DataType
+        printf "$DataType:" >> "Database/$DBName/${TableName}_metaData"
+
+        read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
+        if [ "$IsPrimaryKey" == "y" ]; then
+           printf "pk \n">> "Database/$DBName/${TableName}_metaData"
+        #else 
+          # printf "\n"
+        fi     
+
+    done
+
+    echo "Table $TableName created successfully in $DBName database."
+}
+list_tables() {
+  DBName="$1"
+  ls Database/$DBName | grep -v "_metaData"
+} 
+drop_tables(){
+    DBName="$1"
+    read -p "Enter the name of the table: " TableName
+    tables=$( ls Database/$DBName | grep -v "_metaData")
+    for file in $tables;do
+        if [ "$TableName" == "$file" ];then
+            rm Database/$DBName/$TableName 
+            rm "Database/$DBName/${TableName}_metaData"
+            echo "Table $TableName droped successfully in $DBName database."
+            break
+        else
+        echo "Table $TableName not exist"
+        break
+        fi
+    done
+}
+#create_table "MyDatabase"
+#list_tables "MyDatabase"
+drop_tables "MyDatabase"
+
