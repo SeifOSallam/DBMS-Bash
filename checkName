@@ -13,6 +13,41 @@ check_name () {
         ;;
     esac
 }
+check_dataType(){
+    case $1 in 
+         [iI][nN][tT]|[sS][tT][rR][iI][nN][gG])
+            echo "-1"
+        ;;
+        *)
+            echo "1"
+        ;;
+    esac
+}
+check_yesNo(){
+    #y n
+    case $1 in 
+        [yY]|[nN]|[yY][eE][sS]|[nN][oO])
+            echo "-1"
+        ;;
+        *)
+            echo "1"
+        ;;
+    esac
+}
+check_is_int(){
+      case $1 in 
+        *[0-9])
+            echo "-1"
+        ;;
+        *)
+            echo "1"
+        ;;
+    esac
+
+}
+
 #read -p "enter the name " name
+#check_is_int $name
+#check_dataType $name
 #output=$(check_name "$name") 
 #echo $output

@@ -1,0 +1,56 @@
+#! /usr/bin/bash
+insert_into_table(){
+    DBName="$1" 
+    TableName="$2"
+    numOfFields=$(awk -F: '{print NF; exit}' "Database/$DBName/${TableName}_metaData")
+    Name=($(awk -F: '{print $1}' "Database/$DBName/${TableName}_metaData"))
+    DataType=($(awk -F: '{print $2}' "Database/$DBName/${TableName}_metaData"))
+    PK=($(awk -F: '{print ($3 == "" ? "x" : $3)}' "Database/$DBName/${TableName}_metaData"))
+
+   for ((i=0; i<$numOfFields; i++)); 
+    do
+
+            read -p "Enter the ${Name[$i]} " FieldName
+            if [[ ${PK[$i]} != "pk" ]]; then
+
+                if [[ $i == 0 ]]; then
+                    printf "$FieldName" >> "Database/$DBName/${TableName}"
+                else 
+                    printf ":$FieldName" >> "Database/$DBName/${TableName}"
+                fi
+
+            else
+
+                flag=0
+                values=($(awk -F: -v col=$((i+1)) '{print $col}' "Database/$DBName/$TableName"))
+
+                for ((x=0; x<${#values[@]}; x++)); do
+
+                    if (( $FieldName == ${values[$x]} )); then
+                        flag=1
+
+                    fi
+
+                done
+                if [[ $flag == 1 ]];then
+
+                    echo "OOP! can't repeat this values for ${Name[$i]} is unique"
+                    ((i--))
+
+                else
+
+                    if [[ $i == 0 ]]; then
+                        printf "$FieldName" >> "Database/$DBName/${TableName}"
+                    else 
+                        printf ":$FieldName" >> "Database/$DBName/${TableName}"
+                    fi
+
+                fi
+            fi
+
+    done
+
+
+}
+
+#insert_into_table "MyDatabase" "kk"
