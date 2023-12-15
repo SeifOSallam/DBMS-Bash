@@ -1,5 +1,7 @@
 #! /usr/bin/bash
 source checkName
+source DMLFunc
+
 create_table() {
    echo $1
     DBName="$1"
@@ -89,7 +91,7 @@ select_table() {
 						;;
 					"Update Table")
 						##
-                        update_table Database/$DBName/$tablename
+						update_table "Database/$DBName" $tablename
 						break
 						;;
 					"Delete from Table")

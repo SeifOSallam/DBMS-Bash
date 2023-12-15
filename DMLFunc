@@ -1,0 +1,163 @@
+#! /bin/bash
+check_column_exist() {
+	#metadata=$1
+	IFS=$OIFS
+	declare -a existingnames=($(cat $metadatafile | awk -F: '{print $1}'))
+	
+	columnname=$1
+	for name in ${existingnames[@]}
+	do
+		if [[ $name == $columnname ]];then
+			IFS=$OIFS
+			return "1"
+		fi
+	done
+	
+	IFS=$OIFS
+	return "0"
+}
+valid_statements() {
+	declare -a allstatements=($@)
+	
+	for statement in ${allstatements[@]}
+	do
+		IFS="="
+		declare -a states=($statement)
+		columnname=${states[0]}
+		check_column_exist $columnname
+		colexists=$?
+		if [[ $colexists != "1" ]];then
+			return "0"
+		fi
+	done
+	return "1"
+}
+get_cond_number() {
+	IFS="="
+	declare -a states=($1)
+	columnname=${states[0]}
+	IFS=$OIFS
+	declare -i pos=0
+	declare -a existingnames=($(cat $metadatafile | awk -F: '{print $1}'))
+	for name in ${existingnames[@]}
+	do
+		if [[ $name == $columnname ]];then
+			echo $pos
+		fi
+		pos=$pos+1
+	done
+}
+
+get_col_numbers() {
+	declare -a allstatements=($@)
+	for statement in ${allstatements[@]}
+	do
+		IFS="="
+		declare -a states=($statement)
+		columnname=${states[0]}
+		IFS=$OIFS
+		declare -i pos=0
+		declare -a existingnames=($(cat $metadatafile | awk -F: '{print $1}'))
+		for name in ${existingnames[@]}
+		do
+			if [[ $name == $columnname ]];then
+				echo $pos
+			fi
+			pos=$pos+1
+		done
+	done
+}
+get_update_values() {
+	declare -a allstatements=($@)
+	for statement in ${allstatements[@]}
+	do
+		IFS="="
+		declare -a values=($statement)
+		IFS=$OIFS
+		echo ${values[1]}
+	done
+}
+get_cond_value() {
+	IFS="="
+	declare -a states=($1)
+	echo ${states[1]}
+	IFS=$OIFS
+}
+
+update_table() {
+	OIFS=$IFS
+	selecteddb=$1
+	tablefile=$selecteddb/$2
+	metadatafile=$1/$2"_metaData"
+	metadataraw=$(cat $metadatafile)
+	dataraw=$(cat $tablefile)
+	echo $dataraw
+	echo "Existing columns:"
+	for i in ${metadataraw[@]}
+	do
+		echo $i | awk -F: '{print $1"("$2")";}'
+	done
+	
+	echo "Please enter the condition (eg. id=5)"
+	read condition
+	condition=$(echo -e "${condition}" | tr -d '[:space:]')
+	
+	IFS="="
+	declare -a conditionElements=($condition)
+	IFS=$OIFS
+	check_column_exist ${conditionElements[0]}
+	validcond=$?
+	if (( ${#conditionElements[@]} != 2 || $validcond != "1" ));then
+		echo "Invalid condition."
+		return
+	fi
+	echo "Enter the columns you wish to change seperated by comas, and their new values"
+	echo "Example: (col=newValue, col2=newValue2...)"
+	read updateinput
+	updateinput=$(echo -e "${updateinput}" | tr -d '[:space:]')
+	IFS=","
+	declare -a updates=($updateinput)
+	IFS=$OIFS
+	valid_statements ${updates[@]}
+	validupdate=$?
+	IFS=$OIFS
+	if [[ $validupdate == "1" ]];then
+		echo "Update is valid"
+		declare -a numbermapping=$(get_col_numbers ${updates[@]})
+		declare -a valuemapping=$(get_update_values ${updates[@]})
+		condfield=$(get_cond_number $condition)
+		condvalue=$(get_cond_value $condition)
+		#echo ${numbermapping[@]}
+		#echo ${valuemapping[@]}
+		#echo $condvalue
+		#return
+		awk -F: -v numberplain="${numbermapping[@]}" -v condnum="$condfield" -v valueplain="${valuemapping[@]}" -v condval="$condvalue"\
+		'BEGIN{split(numberplain,numMap,"\n");split(valueplain,valMap,"\n"); for (i in numMap) ++numMap[i]; ++condnum;} \
+		{row="";ptr=1; \
+		if($condnum == condval){\
+			for(i=1;i<=NF;i++){\
+				
+			 	if(i == numMap[ptr]){\
+			 		if(row == "") {row=valMap[ptr++];}\
+			 		else{row=row":"valMap[ptr++];}\
+			 	}\
+			  	else {
+			  		if(row == "") {row=$i;}\
+			 		else{row=row":"$i;}\
+			 	}\
+			 } \
+			 print row;
+		 } \
+		 else {\
+		 	print $0;\
+		 }
+		 
+		 }' $tablefile > $selecteddb/newData
+		#for (i=1;i<=NF;i++)
+		#print "Current value: "valMap[numMap[ptr]]" , ptr = "ptr;
+	else
+		echo "Update is not valid"
+	fi
+}
+
+update_table Database/testdb test
