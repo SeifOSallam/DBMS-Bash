@@ -1,5 +1,6 @@
 #! /usr/bin/bash
 source checkName
+source DMLFunc
 create_table() {
      echo $1
     DBName="$1"
@@ -87,15 +88,15 @@ select_table() {
 						break
 						;;
 					"Insert into Table")
-						##
+						insert_into_table $DBName $tablename
 						break
 						;;
 					"Update Table")
-						##
+						#
 						break
 						;;
 					"Delete from Table")
-						##
+						deleteTable $DBName $tablename
 						break
 						;;
 					"Disconnect Table")
@@ -122,4 +123,5 @@ select_table() {
 #create_table "MyDatabase"
 #list_tables "MyDatabase"
 #drop_tables "MyDatabase"
+
 
