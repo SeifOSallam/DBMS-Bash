@@ -46,6 +46,7 @@ check_is_int(){
 
 }
 
+
 #read -p "enter the name " name
 #check_is_int $name
 #check_dataType $name
