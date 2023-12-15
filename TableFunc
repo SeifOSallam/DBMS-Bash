@@ -1,15 +1,12 @@
 #! /usr/bin/bash
 source checkName
 source DMLFunc
-
 create_table() {
-   echo $1
+     echo $1
     DBName="$1"
+    oneFlag=0
     tables=$( ls Database/$DBName | grep -v "_metaData")
-    for file in $tables;do
-    	echo $file
-    done
-    #output=$(check_name "$name") 
+
     while true; do
             read -p "Enter the name of the table: " TableName
             modifiedTableName=$(check_name "$TableName")
@@ -36,12 +33,17 @@ create_table() {
         read -p "Enter the datatype of field $i (string/int): " DataType
         printf "$DataType:" >> "Database/$DBName/${modifiedTableName}_metaData"
 
-        read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
-        if [ "$IsPrimaryKey" == "y" ]; then
-           printf "pk \n">> "Database/$DBName/${modifiedTableName}_metaData"
-        #else 
-          # printf "\n"
-        fi     
+        #read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
+        #if [ "$IsPrimaryKey" == "y" ]; then
+        #  printf "pk \n">> "Database/$DBName/${modifiedTableName}_metaData"
+        #fi     
+        if [[ $oneFlag == 0 ]];then
+            read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
+            if [ "$IsPrimaryKey" == "y" ]; then
+                printf "pk \n">> "Database/$DBName/${modifiedTableName}_metaData"
+            fi     
+            oneFlag=1
+        fi
 
     done
 
@@ -86,7 +88,7 @@ select_table() {
 						break
 						;;
 					"Insert into Table")
-						##
+						insert_into_table $DBName $tablename
 						break
 						;;
 					"Update Table")
@@ -95,7 +97,7 @@ select_table() {
 						break
 						;;
 					"Delete from Table")
-						##
+						deleteTable $DBName $tablename
 						break
 						;;
 					"Disconnect Table")
@@ -122,4 +124,5 @@ select_table() {
 #create_table "MyDatabase"
 #list_tables "MyDatabase"
 #drop_tables "MyDatabase"
+
 
