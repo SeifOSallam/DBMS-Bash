@@ -52,5 +52,86 @@ insert_into_table(){
 
 
 }
+deleteTable(){
+    DBNameD="$1" 
+    TableNameD="$2"
 
-#insert_into_table "MyDatabase" "kk"
+    select choice in "Delete All Data" "Delete by column" "Delete specific column" "Delete multiple column by name"
+			do
+				case $choice in
+					"Delete All Data")
+                        awk  '{next;}' "Database/$DBName/${TableName}" >"Database/$DBName/${TableName}" 
+						break
+						;;
+
+					"Delete by column")
+                        read -p "Enter the condition to delete(coulmnName = specific value): " columnName operator value
+                        FieldNum=$(return_num_of_Field  $columnName  $DBNameD $TableNameD)
+                        echo "this is $FieldNum"
+                        awk -F: -v fNum="$FieldNum" -v valuetest="$value" '{if($fNum == valuetest){next;} print }' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
+                        mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
+						break
+						;;
+
+                    "Delete specific column")
+                        read -p "Enter the name of column you want to delete it: " columnName 
+                        FieldNum=$(return_num_of_Field  $columnName  $DBNameD $TableNameD)
+
+                        awk -F: -v fNum="$FieldNum" '{ for(v=1;v<=NF;v++) { if(fNum==v) $fNum=""; if(v==NF && fNum!=v){$v=$v} else if(v!=NF && fNum!=v) $v=$v":" } print }' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
+                        mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
+
+                        #delete from table_metaData
+                        awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNameD/${TableNameD}_metaData" > "Database/$DBNameD/${TableNameD}_temp"
+                        mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/${TableNameD}_metaData"
+						break
+						;;
+                    "Delete multiple column by name")
+                        
+                       while true ; do
+                            Name=($(awk -F: '{print $1}' "Database/$DBNameD/${TableNameD}_metaData"))
+                            echo column names
+                            for ((l=0; l<${#Name[@]}; l++)); do
+                            echo ${Name[$l]}
+                        done
+
+                        read -p "Enter the name of column you want to delete it: " coName 
+                        delete_multiple_Column $coName  $DBNameD $TableNameD
+                        
+                        done 
+						;;
+					*) 
+						echo $REPLY is not one of the choices.
+						break
+						;;
+				esac
+			done
+}
+return_num_of_Field(){
+    fieldtest=$1
+    DBNameT=$2
+    TableNameT=$3
+    Name=($(awk -F: '{print $1}' "Database/$DBNameT/${TableNameT}_metaData"))
+    for ((z=0; z<${#Name[@]}; z++)); do
+        if [[ "$fieldtest" == "${Name[$z]}" ]]; then 
+            echo $((z+1))
+            break
+        fi
+    done
+}
+delete_multiple_Column(){
+    cName="$1"
+    DBNamex="$2"
+    TableNamex="$3"
+
+    FieldNum=$(return_num_of_Field "$cName" "$DBNamex" "$TableNamex")
+
+    awk -F: -v fNum="$FieldNum" '{ for(v=1;v<=NF;v++) { if(fNum==v) $fNum=""; if(v==NF && fNum!=v){$v=$v} else if(v!=NF && fNum!=v) $v=$v":" } print }' "Database/$DBNamex/$TableNamex" > "Database/$DBNamex/${TableNamex}_temp"
+    mv "Database/$DBNamex/${TableNamex}_temp" "Database/$DBNamex/$TableNamex"
+
+    # delete from table_metaData
+    awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNamex/${TableNamex}_metaData" > "Database/$DBNamex/${TableNamex}_temp"
+    mv "Database/$DBNamex/${TableNamex}_temp" "Database/$DBNamex/${TableNamex}_metaData"
+
+}
+deleteTable "MyDatabase" "kk"
+#return_num_of_Field name  "MyDatabase" "kk"
