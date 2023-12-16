@@ -17,6 +17,24 @@ check_column_exist() {
 	IFS=$OIFS
 	return "0"
 }
+check_column_pk() {
+	colnum=$( get_col_numbers $1 )
+	isPK=$(awk -F: -v colnum="$colnum" \
+	'\
+	{\
+		if (NR == (colnum+1)) {\
+			print $3
+		}
+	}\
+	' $metadatafile)
+	isPK=$(echo -e "${isPK}" | tr -d '[:space:]')
+	if [[ $isPK == "pk" ]];then
+		return "1"
+	else
+		return "0"
+	fi
+}
+
 valid_statements() {
 	declare -a allstatements=($@)
 	
@@ -32,6 +50,33 @@ valid_statements() {
 		fi
 		check_column_exist $columnname
 		colexists=$?
+		check_column_pk $columnname
+		isPK=$?
+		if [[ $isPK == "1" ]];then 
+			colnum=$(get_col_numbers $columnname)
+			valid=$(awk -F: -v colnum="$colnum" -v colval="$value"\
+			'\
+			BEGIN{\
+				colnum++;
+				valid="true"
+			}\
+			{\
+				for (i=1;i<=NF;i++) {\
+					if (i == colnum && $i == colval) {\
+						valid="false";
+					}\
+				}
+			}\
+			END{\
+				print valid;
+			}
+			' $tablefile)
+			valid=$(echo -e "${valid}" | tr -d '[:space:]')
+			if [[ $valid == "false" ]];then
+				return "0"
+			fi
+		fi
+		
 		if [[ $colexists != "1" ]];then
 			return "0"
 		fi
@@ -163,6 +208,8 @@ update_table() {
 	
 	echo "Please enter the condition (eg. id=5)"
 	read condition
+	echo $condition | awk -F= '{print $1;print $2; print "length of 1 = "length($1); print "length of 2 = "length($2);}'
+	return
 	condition=$(echo -e "${condition}" | tr -d '[:space:]')
 	
 	IFS="="
@@ -525,3 +572,4 @@ delete_multiple_Column(){
 #deleteTable "MyDatabase" "kk"
 #return_num_of_Field name  "MyDatabase" "kk"
 #select_from_table Database/testdb test
+update_table Database/testdb test
