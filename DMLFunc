@@ -34,10 +34,8 @@ check_column_pk() {
 		return "0"
 	fi
 }
-
 valid_statements() {
 	declare -a allstatements=($@)
-	
 	for statement in ${allstatements[@]}
 	do
 		IFS="="
@@ -208,8 +206,6 @@ update_table() {
 	
 	echo "Please enter the condition (eg. id=5)"
 	read condition
-	echo $condition | awk -F= '{print $1;print $2; print "length of 1 = "length($1); print "length of 2 = "length($2);}'
-	return
 	condition=$(echo -e "${condition}" | tr -d '[:space:]')
 	
 	IFS="="
@@ -572,4 +568,4 @@ delete_multiple_Column(){
 #deleteTable "MyDatabase" "kk"
 #return_num_of_Field name  "MyDatabase" "kk"
 #select_from_table Database/testdb test
-update_table Database/testdb test
+#update_table Database/testdb test
