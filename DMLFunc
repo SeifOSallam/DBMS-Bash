@@ -301,7 +301,7 @@ select_from_table() {
 insert_into_table(){
     DBName="$1" 
     TableName="$2"
-    numOfFields=$(awk -F: '{print NF; exit}' "Database/$DBName/${TableName}_metaData")
+    numOfFields=$(awk -F: 'END {print NR}' "Database/$DBName/${TableName}_metaData")
     Name=($(awk -F: '{print $1}' "Database/$DBName/${TableName}_metaData"))
     DataType=($(awk -F: '{print $2}' "Database/$DBName/${TableName}_metaData"))
     PK=($(awk -F: '{print ($3 == "" ? "x" : $3)}' "Database/$DBName/${TableName}_metaData"))
@@ -320,7 +320,7 @@ insert_into_table(){
             if [[ ${PK[$i]} != "pk" ]]; then
 
                 if [[ $i == 0 ]]; then
-                   echo -n "$FieldName" >> "Database/$DBName/${TableName}"
+                    echo -n "$FieldName" >> "Database/$DBName/${TableName}"
                 else 
                    echo -n ":$FieldName" >> "Database/$DBName/${TableName}"
                 fi
@@ -332,7 +332,7 @@ insert_into_table(){
 
                 for ((x=0; x<${#values[@]}; x++)); do
 
-                    if (( $FieldName == ${values[$x]} )); then
+                    if [[ $FieldName == ${values[$x]} ]]; then
                         flag=1
 
                     fi
