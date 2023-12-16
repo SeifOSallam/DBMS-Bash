@@ -85,6 +85,7 @@ select_table() {
 				case $choice in
 					"Select from Table")
 						##
+						select_from_table "Database/$DBName" $tablename
 						break
 						;;
 					"Insert into Table")
@@ -102,7 +103,8 @@ select_table() {
 						;;
 					"Disconnect Table")
 						disconnecttable=true
-                        printf "Disconnecting from "$tablename"...\n"
+						clear
+                        			printf "Disconnecting from "$tablename"...\n"
 						break
 						;;
 					*)
