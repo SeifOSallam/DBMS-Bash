@@ -24,7 +24,12 @@ valid_statements() {
 	do
 		IFS="="
 		declare -a states=($statement)
+		IFS=$OIFS
 		columnname=${states[0]}
+		value=${states[1]}
+		if [[ $value == "" ]];then
+			return "0"
+		fi
 		check_column_exist $columnname
 		colexists=$?
 		if [[ $colexists != "1" ]];then
@@ -85,6 +90,64 @@ get_cond_value() {
 	IFS=$OIFS
 }
 
+get_matching_rows() {
+	declare -a allstatements=($@)
+	declare -a colnums=$(get_col_numbers ${allstatements[@]})
+	declare -a colvals
+	for statement in ${allstatements[@]}
+	do
+		IFS="="
+		declare -a stat=($statement)
+		IFS=$OIFS
+		colvals+=(${stat[1]})
+	done
+	temp=${colvals[@]}
+	tempnums=${colnums[@]}
+	validrows=$(awk -F: -v rawvals="$temp" -v numbersplain="$tempnums"\
+		'\
+		BEGIN{\
+			split(rawvals,vals," ");\
+			split(numbersplain,numMap," ");\
+			for (i in numMap) {\
+				++numMap[i];\
+			};\
+			
+			for (i in numMap) {\
+				numValue[numMap[i]]=vals[i];
+			}\
+			for (i=1;i<=NF;i++) {\
+				if ( numValue[i] == "" ) {\
+					numValue[i] = "-";
+				}\
+			}\
+			
+		}\
+		{\
+			for (i=1;i<=NF;i++) {\
+				if ( numValue[i] == "" ) {\
+					numValue[i] = "-";
+				}\
+			}\
+			ptr=1;\
+			valid="true"
+			for (i=1;i<=NF;i++) {\
+				if (numValue[i] != "-"){\
+					if ($i != numValue[i]) {\
+						valid="false";
+						break;	
+					}	
+				}\
+			}\
+			if (valid == "true") {\
+				print NR;
+			}
+			
+		}\
+		' $tablefile)
+		echo $validrows
+}
+
+
 update_table() {
 	OIFS=$IFS
 	selecteddb=$1
@@ -92,7 +155,6 @@ update_table() {
 	metadatafile=$1/$2"_metaData"
 	metadataraw=$(cat $metadatafile)
 	dataraw=$(cat $tablefile)
-	echo $dataraw
 	echo "Existing columns:"
 	for i in ${metadataraw[@]}
 	do
@@ -128,10 +190,6 @@ update_table() {
 		declare -a valuemapping=$(get_update_values ${updates[@]})
 		condfield=$(get_cond_number $condition)
 		condvalue=$(get_cond_value $condition)
-		#echo ${numbermapping[@]}
-		#echo ${valuemapping[@]}
-		#echo $condvalue
-		#return
 		awk -F: -v numberplain="${numbermapping[@]}" -v condnum="$condfield" -v valueplain="${valuemapping[@]}" -v condval="$condvalue"\
 		'BEGIN{split(numberplain,numMap,"\n");split(valueplain,valMap,"\n"); for (i in numMap) ++numMap[i]; ++condnum;} \
 		{row="";ptr=1; \
@@ -153,12 +211,90 @@ update_table() {
 		 	print $0;\
 		 }
 		 
-		 }' $tablefile > $selecteddb/newData
-		#for (i=1;i<=NF;i++)
-		#print "Current value: "valMap[numMap[ptr]]" , ptr = "ptr;
+		 }' $tablefile > $tablefile".tmp"
+		 mv $tablefile".tmp" $tablefile
 	else
 		echo "Update is not valid"
 	fi
+}
+
+select_from_table() {
+	OIFS=$IFS
+	selecteddb=$1
+	tablefile=$selecteddb/$2
+	metadatafile=$1/$2"_metaData"
+	
+	select option in "Select ALL from Table" "Select column(s) from Table" "Select data matching condition(s)" "Exit"
+	do
+		case $option in
+			"Select ALL from Table")
+				awk -F: '{printf NR"-"; for (i=1;i<=NF;i++) {printf " "$i;}; print "";}' $tablefile
+				break
+				;;
+			"Select column(s) from Table")
+				echo "Enter the column(s) seperated by spaces"
+				read input
+				declare -a selectedcols=($input)
+				validcols="0"
+				for col in ${selectedcols[@]}
+				do
+					check_column_exist $col
+					validcols=$?
+					if [[ $validcols == "0" ]];then
+						break
+					fi
+				done
+				if [[ $validcols == "1" ]];then
+					declare -a colnums=$(get_col_numbers ${selectedcols[@]})
+					awk -F: -v plainnums="${colnums[@]}" \
+					'BEGIN{split(plainnums, numMap, "\n"); }\
+					{\
+					ptr=1; \
+					printf NR"-";\
+					 for (i=1;i<=NF;i++) {\
+					 	if (i == (numMap[ptr]+1) ){\
+					 		printf " "$i;\
+					 		ptr++;\
+					 	}\
+					 };\
+					 print "";}' $tablefile
+				else
+					echo "Invalid columns."
+				fi
+				break
+				;;
+			"Select data matching condition(s)")
+				echo "Enter the conditions, seperated by comma (,)"
+				read selectinput
+				selectinput=$(echo -e "${selectinput}" | tr -d '[:space:]')
+				IFS=","
+				declare -a conditions=($selectinput)
+				IFS=$OIFS
+				valid_statements ${conditions[@]}
+				validselect=$?
+				if [[ $validselect == "1" ]];then
+					validrows=$(get_matching_rows ${conditions[@]})
+					awk -F: -v validrowsraw="$validrows" 'BEGIN{split(validrowsraw,validrows," ");ctr=1;}\
+					{\
+					if (NR == validrows[ctr]){\
+						printf ctr"- ";\
+						for (i=1;i<=NF;i++) {\
+							printf $i" "
+						}\
+						print ""
+						ctr++;\
+					}\
+					}' $tablefile
+				else
+					echo "Invalid select statements"
+				fi
+				break
+				;;
+			"Exit")
+				break
+				;;
+		esac
+	done
 }
 
 
@@ -388,3 +524,4 @@ delete_multiple_Column(){
 }
 #deleteTable "MyDatabase" "kk"
 #return_num_of_Field name  "MyDatabase" "kk"
+#select_from_table Database/testdb test
