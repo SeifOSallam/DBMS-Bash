@@ -40,12 +40,14 @@ create_table() {
         if [[ $oneFlag == 0 ]];then
             read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
             if [ "$IsPrimaryKey" == "y" ]; then
-                printf "pk \n">> "Database/$DBName/${modifiedTableName}_metaData"
+                printf "pk ">> "Database/$DBName/${modifiedTableName}_metaData"
+             
             fi     
             oneFlag=1
         fi
-
+        printf "\n">> "Database/$DBName/${modifiedTableName}_metaData"
     done
+
 
     echo "Table $modifiedTableName created successfully in $DBName database."
 }
@@ -126,5 +128,4 @@ select_table() {
 #create_table "MyDatabase"
 #list_tables "MyDatabase"
 #drop_tables "MyDatabase"
-
 
