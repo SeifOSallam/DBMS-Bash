@@ -36,6 +36,8 @@ check_column_pk() {
 }
 valid_statements() {
 	declare -a allstatements=($@)
+	DatatypesRaw=$(awk -F: '{print $2}' $metadatafile)
+	declare -a Datatypes=($DatatypesRaw)
 	for statement in ${allstatements[@]}
 	do
 		IFS="="
@@ -74,7 +76,13 @@ valid_statements() {
 				return "0"
 			fi
 		fi
-		
+		colnumarr=$(get_col_numbers $columnname)
+		declare -i colnum=${colnumarr[0]}
+		if [[ ${Datatypes[$colnum]} == "int" ]];then
+			if [[ $(check_is_int $value) == "1" ]];then
+				return "0"
+			fi
+		fi
 		if [[ $colexists != "1" ]];then
 			return "0"
 		fi
@@ -158,12 +166,6 @@ get_matching_rows() {
 			for (i in numMap) {\
 				numValue[numMap[i]]=vals[i];
 			}\
-			for (i=1;i<=NF;i++) {\
-				if ( numValue[i] == "" ) {\
-					numValue[i] = "-";
-				}\
-			}\
-			
 		}\
 		{\
 			for (i=1;i<=NF;i++) {\
@@ -229,31 +231,47 @@ update_table() {
 	IFS=$OIFS
 	if [[ $validupdate == "1" ]];then
 		echo "Update is valid"
-		declare -a numbermapping=$(get_col_numbers ${updates[@]})
-		declare -a valuemapping=$(get_update_values ${updates[@]})
+		declare -a numbermappingraw=$(get_col_numbers ${updates[@]})
+		declare -a valuemappingraw=$(get_update_values ${updates[@]})
+		numbermapping=$numbermappingraw
+		valuemapping=$valuemappingraw
 		condfield=$(get_cond_number $condition)
 		condvalue=$(get_cond_value $condition)
-		awk -F: -v numberplain="${numbermapping[@]}" -v condnum="$condfield" -v valueplain="${valuemapping[@]}" -v condval="$condvalue"\
-		'BEGIN{split(numberplain,numMap,"\n");split(valueplain,valMap,"\n"); for (i in numMap) ++numMap[i]; ++condnum;} \
-		{row="";ptr=1; \
-		if($condnum == condval){\
-			for(i=1;i<=NF;i++){\
-				
-			 	if(i == numMap[ptr]){\
-			 		if(row == "") {row=valMap[ptr++];}\
-			 		else{row=row":"valMap[ptr++];}\
-			 	}\
-			  	else {
-			  		if(row == "") {row=$i;}\
-			 		else{row=row":"$i;}\
-			 	}\
+		awk -F: -v numberplain="$numbermapping" -v condnum="$condfield" -v valueplain="$valuemapping" -v condval="$condvalue"\
+		'BEGIN{\
+			split(numberplain,numMap,"\n");\
+			split(valueplain,valMap,"\n");\
+			for (i in numMap) ++numMap[i];\
+			++condnum;\
+			for (i in numMap) {\
+				numValue[numMap[i]]=valMap[i];
+			}\
+		}\
+		{\
+			
+			row="";\
+			for (i=1;i<=NF;i++) {\
+				if ( numValue[i] == "" ) {\
+					numValue[i] = "-";
+				}\
+			}\
+			if($condnum == condval){\
+				for(i=1;i<=NF;i++){\
+					
+				 	if(numValue[i] != "-"){\
+				 		if(row == "") {row=numValue[i];}\
+				 		else{row=row":"numValue[i];}\
+				 	}\
+				  	else {
+				  		if(row == "") {row=$i;}\
+				 		else{row=row":"$i;}\
+				 	}\
+				 } \
+				 print row;
 			 } \
-			 print row;
-		 } \
-		 else {\
-		 	print $0;\
-		 }
-		 
+			 else {\
+			 	print $0;\
+			 }
 		 }' $tablefile > $tablefile".tmp"
 		 mv $tablefile".tmp" $tablefile
 	else
@@ -565,7 +583,4 @@ delete_multiple_Column(){
 
 
 }
-#deleteTable "MyDatabase" "kk"
-#return_num_of_Field name  "MyDatabase" "kk"
-#select_from_table Database/testdb test
-#update_table Database/testdb test
+
