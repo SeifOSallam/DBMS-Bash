@@ -2,7 +2,7 @@
 source checkName
 source DMLFunc
 create_table() {
-     echo $1
+
     DBName="$1"
     oneFlag=0
     tables=$( ls Database/$DBName | grep -v "_metaData")
@@ -10,7 +10,6 @@ create_table() {
     while true; do
             read -p "Enter the name of the table: " TableName
             modifiedTableName=$(check_name "$TableName")
-            echo $modifiedTableName
             if [[ "$modifiedTableName" != "1" ]]; then
                 if [[ ! -e Database/$DBName/$modifiedTableName ]]; then
                     touch "Database/$DBName/$modifiedTableName"
@@ -24,27 +23,64 @@ create_table() {
  	    fi
     done
 
-    read -p "Enter the number of fields: " NumFields
 
-     for ((i = 1; i <= NumFields; i++)); do
-        read -p "Enter the name of field $i: " FieldName
-        printf "$FieldName:" >> "Database/$DBName/${modifiedTableName}_metaData"
+    while true; do
+            #read -p "Enter the number of fields: " NumFields
+            read -p "Enter the number of fields: " oo
+            test=$(check_is_int "$oo")
 
-        read -p "Enter the datatype of field $i (string/int): " DataType
-        printf "$DataType:" >> "Database/$DBName/${modifiedTableName}_metaData"
+            if [[ "$test" != "1" ]];then
+                break
+            else
+                echo "Invalid NumFields."
+            fi
 
-        #read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
-        #if [ "$IsPrimaryKey" == "y" ]; then
-        #  printf "pk \n">> "Database/$DBName/${modifiedTableName}_metaData"
-        #fi     
-        if [[ $oneFlag == 0 ]];then
-            read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
-            if [ "$IsPrimaryKey" == "y" ]; then
-                printf "pk ">> "Database/$DBName/${modifiedTableName}_metaData"
-             
-            fi     
-            oneFlag=1
-        fi
+    done
+
+    for ((i = 1; i <= $oo; i++)); do
+
+            while true; do
+                read -p "Enter the name of field $i: " FieldName
+                modifiedFieldName=$(check_name "$FieldName")
+                if [[ "$modifiedFieldName" != "1" ]];then
+                    printf "$modifiedFieldName:" >> "Database/$DBName/${modifiedTableName}_metaData"
+                     break
+                else
+                  echo "Invalid Column Name."
+                fi
+             done
+
+            while true; do
+                read -p "Enter the datatype of field $i (string/int): " DataType
+                checkDataType=$(check_dataType "$DataType")
+                if [[ "$checkDataType" != "1" ]];then
+                    re=$(echo "$DataType" | tr '[:upper:]' '[:lower:]')
+                    printf "$re:" >> "Database/$DBName/${modifiedTableName}_metaData" 
+                    break
+                else
+                    echo "Invalid Datatype."
+                 fi
+             done  
+
+            if [[ $oneFlag == 0 ]];then
+                 while true;do
+                     read -p "Is field $i a primary key? (y/n): " IsPrimaryKey
+                     modifiedYesNo=$(check_yesNo "$IsPrimaryKey")
+                    if [[ "$modifiedYesNo" != "1" ]]; then 
+                         if [ "$modifiedYesNo" == "y" ]; then
+                            printf "pk ">> "Database/$DBName/${modifiedTableName}_metaData"
+                            oneFlag=1
+                            break
+                        else 
+                             break
+                         fi     
+                    
+                    else
+                          echo "Invalid response."
+                     fi
+                    echo $oneFlag
+                done
+            fi
         printf "\n">> "Database/$DBName/${modifiedTableName}_metaData"
     done
 
@@ -121,11 +157,4 @@ select_table() {
 		echo "This table does not exist."
 	fi	
 }
-
-
-
-
-#create_table "MyDatabase"
-#list_tables "MyDatabase"
-#drop_tables "MyDatabase"
 

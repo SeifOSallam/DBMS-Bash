@@ -4,7 +4,7 @@ export LC_COLLATE=C
 
 check_name () {
     case $1 in 
-        [a-zA-Z_][a-zA-Z0-9_]*)
+       [a-zA-Z_]*([a-zA-Z0-9_[:space:]]))
             result=$(tr -s ' ' '_' <<< "$1")
             #echo "$1" | tr -s ' ' '_'
             echo $result
@@ -27,8 +27,11 @@ check_dataType(){
 check_yesNo(){
     #y n
     case $1 in 
-        [yY]|[nN]|[yY][eE][sS]|[nN][oO])
-            echo "-1"
+        [yY]|[yY][eE][sS])
+            echo "y"
+        ;;
+        [nN]|[nN][oO])
+            echo "n"
         ;;
         *)
             echo "1"
@@ -46,10 +49,3 @@ check_is_int(){
     esac
 
 }
-
-
-#read -p "enter the name " name
-#check_is_int $name
-#check_dataType $name
-#output=$(check_name "$name") 
-#echo $output
