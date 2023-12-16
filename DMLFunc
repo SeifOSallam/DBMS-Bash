@@ -412,7 +412,7 @@ deleteTable(){
                         flagExist2=0
                         flagDisplayErrorMessage2=0
                         while [[ "$flagExist2" == 0 ]];do 
-                            if [[ "$flagDisplayErrorMessage2" == 1 ]];then 
+                            if [[ "$flagDisplayErrorMessage2" == 1 && "$allowDeleteOrNOt" == "pk" ]];then 
                                 echo "Column Not Exist Try Again/OR Is A Primary Can't Removed"
                             fi
                             read -p "Enter the name of column you want to delete it: " columnName 
@@ -453,6 +453,7 @@ deleteTable(){
                                 awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNameD/${TableNameD}_metaData" > "Database/$DBNameD/${TableNameD}_temp"
                                 mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/${TableNameD}_metaData"
                             else
+                               flagExist2=0
                                flagDisplayErrorMessage2=1
                             fi 
                         done
