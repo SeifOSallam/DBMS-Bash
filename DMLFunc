@@ -165,66 +165,66 @@ update_table() {
 insert_into_table(){
     DBName="$1" 
     TableName="$2"
-    numOfFields=$(awk 'END{print NR}' "Database/$DBName/${TableName}_metaData")
+    numOfFields=$(awk -F: '{print NF; exit}' "Database/$DBName/${TableName}_metaData")
     Name=($(awk -F: '{print $1}' "Database/$DBName/${TableName}_metaData"))
     DataType=($(awk -F: '{print $2}' "Database/$DBName/${TableName}_metaData"))
     PK=($(awk -F: '{print ($3 == "" ? "x" : $3)}' "Database/$DBName/${TableName}_metaData"))
-    echo $numOfFields
+
    for ((i=0; i<$numOfFields; i++)); 
     do
+
             read -p "Enter the ${Name[$i]} " FieldName
-            echo ${DataType[$i]};
             if [[ ${DataType[$i]} == "int" ]];then 
                 checkValue=$(check_is_int $FieldName)
-                if [[ $checkValue != 1 ]];then 
-                   if [[ ${PK[$i]} != "pk" ]]; then
+                if [[ $checkValue == 1 ]];then
+                 ((i--))
+                continue
+                fi
+            fi
+            if [[ ${PK[$i]} != "pk" ]]; then
 
-                  if [[ $i == 0 ]]; then
-                    printf "$FieldName" >> "Database/$DBName/${TableName}"
-                  else 
-                    printf ":$FieldName" >> "Database/$DBName/${TableName}"
-                   fi
+                if [[ $i == 0 ]]; then
+                   echo -n "$FieldName" >> "Database/$DBName/${TableName}"
+                else 
+                   echo -n ":$FieldName" >> "Database/$DBName/${TableName}"
+                fi
 
-                   else
+            else
 
-                  flag=0
-                   values=($(awk -F: -v col=$((i+1)) '{print $col}' "Database/$DBName/$TableName"))
+                flag=0
+                values=($(awk -F: -v col=$((i+1)) '{print $col}' "Database/$DBName/$TableName"))
 
-                  for ((x=0; x<${#values[@]}; x++)); do
+                for ((x=0; x<${#values[@]}; x++)); do
 
-                      if (( $FieldName == ${values[$x]} )); then
+                    if (( $FieldName == ${values[$x]} )); then
                         flag=1
-  
-                      fi
 
-                  done
-                  if [[ $flag == 1 ]];then
+                    fi
+
+                done
+                if [[ $flag == 1 ]];then
 
                     echo "OOP! can't repeat this values for ${Name[$i]} is unique"
                     ((i--))
 
-                  else
+                else
 
                     if [[ $i == 0 ]]; then
-                        printf "$FieldName" >> "Database/$DBName/${TableName}"
+                        echo -n "$FieldName" >> "Database/$DBName/${TableName}"
                     else 
-                        printf ":$FieldName" >> "Database/$DBName/${TableName}"
+                        echo -n ":$FieldName" >> "Database/$DBName/${TableName}"
                     fi
 
                 fi
-                fi
-                else
-                    echo "Invalid Data"
-                    ((i--))
-                fi
             fi
 
-            
     done
-       printf "\n" >> "Database/$DBName/${TableName}"
+     printf "\n" >> "Database/$DBName/${TableName}"
+
 
 
 }
+
 deleteTable(){
     DBNameD="$1" 
     TableNameD="$2"
@@ -246,18 +246,21 @@ deleteTable(){
                             fi
                             read -p "Enter the condition to delete(coulmnName  specific value): " columnName  value
                             FieldNum=$(return_num_of_Field  $columnName  $DBNameD $TableNameD)
-                        
+                            
                             Name1=($(awk -F: '{print $1}' "Database/$DBNameD/${TableNameD}_metaData"))
                             for ((l=0; l<${#Name1[@]}; l++)); do
-
+                                echo $columnName
+                                echo ${Name1[$l]}
                                 if [[ $columnName == ${Name1[$l]} ]];then
                                     flagExist=1
-                               
+                                    break
                                 fi
                             done
-
+                            echo "the flage test $flagExist"
+                            echo $FieldNum
+                            echo $value
                             if [[ "$flagExist" == 1 ]];then 
-                                awk -F: -v fNum="$FieldNum" -v valuetest="$value" '{if($fNum == valuetest){next;} print }' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
+                                awk -F: -v fNum="$FieldNum" -v valuetest="$value" '{if($fNum == valuetest){next;} {print} }' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
                                 mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
                             else
                                flagDisplayErrorMessage=1
