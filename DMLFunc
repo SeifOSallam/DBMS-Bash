@@ -1,6 +1,7 @@
 #! /usr/bin/bash
 source checkName
 check_column_exist() {
+	#metadata=$1
 	IFS=$OIFS
 	declare -a existingnames=($(cat $metadatafile | awk -F: '{print $1}'))
 	
@@ -36,6 +37,7 @@ check_column_pk() {
 
 valid_statements() {
 	declare -a allstatements=($@)
+	
 	for statement in ${allstatements[@]}
 	do
 		IFS="="
@@ -127,17 +129,10 @@ get_update_values() {
 	done
 }
 get_cond_value() {
-	declare -a values=($@)
 	IFS="="
-	declare -a firstval=(${values[0]})
+	declare -a states=($1)
+	echo ${states[1]}
 	IFS=$OIFS
-	echo ${firstval[1]}
-	for val in ${values[@]}
-	do
-		if [[ ! $val =~ "=" ]]; then
-			echo $val
-		fi
-	done
 }
 
 get_matching_rows() {
@@ -213,37 +208,16 @@ update_table() {
 	
 	echo "Please enter the condition (eg. id=5)"
 	read condition
-	condition=$(echo $condition | awk -F"=" \
-	'\
-	{\
-		if (NF != 2) {\
-			printf "-"
-		}\
-		else {\
-			split($1,inp1,"");\
-			split($2,inp2,"");\
-			if (inp1[length(inp1)] == " ") {\
-				printf substr($1, 1, length($1)-1);	
-			}\
-			else printf $1;
-			printf "=";
-			if (inp2[1] == " ") {\
-				printf substr($2, 2, length($2));	
-			}\
-			else printf $2;
-		}\
-	}\
-	')
-	if [[ $condition == "-" ]]; then
-		printf "Invalid condition.\n"
-		return
-	fi
+	echo $condition | awk -F= '{print $1;print $2; print "length of 1 = "length($1); print "length of 2 = "length($2);}'
+	return
+	condition=$(echo -e "${condition}" | tr -d '[:space:]')
+	
 	IFS="="
 	declare -a conditionElements=($condition)
 	IFS=$OIFS
 	check_column_exist ${conditionElements[0]}
 	validcond=$?
-	if (( $validcond != "1" ));then
+	if (( ${#conditionElements[@]} != 2 || $validcond != "1" ));then
 		echo "Invalid condition."
 		return
 	fi
@@ -254,7 +228,7 @@ update_table() {
 	IFS=","
 	declare -a updates=($updateinput)
 	IFS=$OIFS
-	valid_statements "${updates[@]}"
+	valid_statements ${updates[@]}
 	validupdate=$?
 	IFS=$OIFS
 	if [[ $validupdate == "1" ]];then
@@ -263,26 +237,10 @@ update_table() {
 		declare -a valuemapping=$(get_update_values ${updates[@]})
 		condfield=$(get_cond_number $condition)
 		condvalue=$(get_cond_value $condition)
-		condvalfixed=$condvalue
-		awk -F: -v numberplain="${numbermapping[@]}" -v condnum="$condfield" -v valueplain="${valuemapping[@]}" -v condval="$condvalfixed"\
-		'BEGIN{\
-			split(numberplain,numMap,"\n");\
-			split(valueplain,valMap,"\n");\
-			for (i in numMap) ++numMap[i];\
-			++condnum;\
-			fixedcond="";\
-			split(condval,condarr,"\n");\
-			for (i=1;i<=length(condarr);i++) {\
-				if (fixedcond == "") {\
-					fixedcond=fixedcond""condarr[i];
-				}\
-				else {\
-					fixedcond=fixedcond" "condarr[i];
-				}\
-			}\
-		} \
-		{row="";ptr=1;\
-		if($condnum == fixedcond){\
+		awk -F: -v numberplain="${numbermapping[@]}" -v condnum="$condfield" -v valueplain="${valuemapping[@]}" -v condval="$condvalue"\
+		'BEGIN{split(numberplain,numMap,"\n");split(valueplain,valMap,"\n"); for (i in numMap) ++numMap[i]; ++condnum;} \
+		{row="";ptr=1; \
+		if($condnum == condval){\
 			for(i=1;i<=NF;i++){\
 				
 			 	if(i == numMap[ptr]){\
