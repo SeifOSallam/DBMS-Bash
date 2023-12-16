@@ -22,7 +22,7 @@ insert_into_table(){
             if [[ ${PK[$i]} != "pk" ]]; then
 
                 if [[ $i == 0 ]]; then
-                    echo -n "$FieldName" >> "Database/$DBName/${TableName}"
+                   echo -n "$FieldName" >> "Database/$DBName/${TableName}"
                 else 
                    echo -n ":$FieldName" >> "Database/$DBName/${TableName}"
                 fi
