@@ -147,7 +147,6 @@ get_matching_rows() {
 		echo $validrows
 }
 
-
 update_table() {
 	OIFS=$IFS
 	selecteddb=$1
@@ -316,6 +315,8 @@ insert_into_table(){
                  ((i--))
                 continue
                 fi
+			elif [[ ${DataType[$i]} == "string" ]];then 
+				FieldName=$(tr -s ' ' '_' <<< "$FieldName")
             fi
             if [[ ${PK[$i]} != "pk" ]]; then
 
@@ -365,7 +366,7 @@ deleteTable(){
     DBNameD="$1" 
     TableNameD="$2"
 
-    select choice in "Delete All Data" "Delete by column" "Delete specific column" "Delete multiple column by name"
+    select choice in "Delete All Data" "Delete by condition" "Delete column by name" "Delete multiple columns by name"
 			do
 				case $choice in
 					"Delete All Data")
@@ -373,7 +374,7 @@ deleteTable(){
 						break
 						;;
 
-					"Delete by column")
+					"Delete by condition")
                         flagExist=0
                         flagDisplayErrorMessage=0
                         while [[ "$flagExist" == 0 ]];do 
@@ -406,7 +407,7 @@ deleteTable(){
 						break
 						;;
 
-                    "Delete specific column")
+                    "Delete column by name")
 
                         flagExist2=0
                         flagDisplayErrorMessage2=0
@@ -414,10 +415,13 @@ deleteTable(){
                             if [[ "$flagDisplayErrorMessage2" == 1 ]];then 
                                 echo "Column Not Exist Try Again"
                             fi
+							if [[  "$allowDeleteOrNOt" == "pk" ]];then 
+                                 echo "Can't Remove This Column Is A Primary Key"
+                            fi
                             read -p "Enter the name of column you want to delete it: " columnName 
                             FieldNum=$(return_num_of_Field  $columnName  $DBNameD $TableNameD)
-
-                        
+                            PK2=($(awk -F: '{print ($3 == "" ? "x" : $3)}' "Database/$DBNameD/${TableNameD}_metaData"))
+                            allowDeleteOrNOt=${PK2[$((FieldNum-1))]}
                             Name1=($(awk -F: '{print $1}' "Database/$DBNameD/${TableNameD}_metaData"))
                             for ((l=0; l<${#Name1[@]}; l++)); do
 
@@ -427,20 +431,41 @@ deleteTable(){
                                 fi
                             done
 
-                            if [[ "$flagExist2" == 1 ]];then 
-                                awk -F: -v fNum="$FieldNum" '{ for(v=1;v<=NF;v++) { if(fNum==v) $fNum=""; if(v==NF && fNum!=v){$v=$v} else if(v!=NF && fNum!=v) $v=$v":" } print }' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
-                                mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
+                           if [[ "$flagExist2" == 1 && "$allowDeleteOrNOt" == "x" ]]; then
 
+								awk -F: -v fNum="$FieldNum" '{
+  														  for (v=1; v<=NF; v++) {
+        													gsub(/^[[:space:]]+|[[:space:]]+$/, "", $v);  
+        													if (fNum == v) {
+         													   $v = "";
+        													}
+       														if (v == NF && fNum != v) {
+            													printf "%s", $v;
+           														gsub(/[[:space:]]/, "", $v);  
+        													} else if (v != NF && fNum != v) {
+            													printf "%s:", $v;
+       														 } else {
+          														printf "%s", $v;
+      														  }
+   															}
+    														printf "\n";
+														}' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
+
+								mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
                                 #delete from table_metaData
                                 awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNameD/${TableNameD}_metaData" > "Database/$DBNameD/${TableNameD}_temp"
                                 mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/${TableNameD}_metaData"
+							elif [[  "$allowDeleteOrNOt" == "pk" ]];then 
+							   flagExist2=0
+							   flagDisplayErrorMessage2=0
                             else
+                               flagExist2=0
                                flagDisplayErrorMessage2=1
                             fi 
                         done
 						break
 						;;
-                    "Delete multiple column by name")
+                    "Delete multiple columns by name")
 
                         while true ; do
                             Name2=($(awk -F: '{print $1}' "Database/$DBNameD/${TableNameD}_metaData"))
@@ -453,15 +478,21 @@ deleteTable(){
                             done
                             flagExist3=0
                             flagDisplayErrorMessage3=0
-                            while [[ "$flagExist3" == 0 ]];do 
-                                if [[ "$flagDisplayErrorMessage3" == 1 ]];then 
+                            while [[ "$flagExist3" == 0  ]];do 
+                                if [[ "$flagDisplayErrorMessage3" == 1 ]]; then
                                     echo "Column Not Exist Try Again"
+                                fi
+								echo "before if $allowDeleteOrNOt3"
+								if [[ "$allowDeleteOrNOt3" == "pk" ]]; then
+                                    echo "Can't Remove This Column Is A Primary Key"
                                 fi
                                 read -p "DO you need to delete coulmn enter (y) if yes: " reply
                                 if [[ $reply == "y" ]];then 
 
-                                    read -p "Enter the name of column you want to delete it:" coName 
-  
+                                 read -p "Enter the name of column you want to delete it:" coName 
+                                 PK3=($(awk -F: '{print ($3 == "" ? "x" : $3)}' "Database/$DBNameD/${TableNameD}_metaData"))
+								 FieldNumT=$(return_num_of_Field "$coName" "$DBNameD" "$TableNameD")
+                                 allowDeleteOrNOt3=${PK3[$((FieldNumT-1))]}
                                         for ((value=0; value<${#Name2[@]}; value++)); do
                                             if [[ $coName == ${Name2[$value]} ]];then
                                                 flagExist3=1
@@ -471,9 +502,10 @@ deleteTable(){
 
                                         if [[ "$flagExist3" != 1 ]];then 
                                              flagDisplayErrorMessage3=1
+										elif [[ "$allowDeleteOrNOt3" == "pk" ]];then 
+										     echo -n ""
                                         else
-                                        delete_multiple_Column $coName  $DBNameD $TableNameD
-
+                                        	delete_multiple_Column $coName  $DBNameD $TableNameD
                                         fi 
                                  
 
@@ -513,15 +545,29 @@ delete_multiple_Column(){
 
     FieldNum=$(return_num_of_Field "$cName" "$DBNamex" "$TableNamex")
 
-    awk -F: -v fNum="$FieldNum" '{ for(v=1;v<=NF;v++) { if(fNum==v) $fNum=""; if(v==NF && fNum!=v){$v=$v} else if(v!=NF && fNum!=v) $v=$v":" } print }' "Database/$DBNamex/$TableNamex" > "Database/$DBNamex/${TableNamex}_temp"
-    mv "Database/$DBNamex/${TableNamex}_temp" "Database/$DBNamex/$TableNamex"
+    awk -F: -v fNum="$FieldNum" '{
+  							for (v=1; v<=NF; v++) {
+        						gsub(/^[[:space:]]+|[[:space:]]+$/, "", $v);  
+        						if (fNum == v) {
+         								 $v = "";
+        						}
+       							if (v == NF && fNum != v) {
+            							printf "%s", $v;
+           								gsub(/[[:space:]]/, "", $v);  
+        						} else if (v != NF && fNum != v) {
+            							printf "%s:", $v;
+       							} else {
+          								printf "%s", $v;
+      							}
+   								}
+    						printf "\n";
+							}' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
 
-    # delete from table_metaData
-    awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNamex/${TableNamex}_metaData" > "Database/$DBNamex/${TableNamex}_temp"
-    mv "Database/$DBNamex/${TableNamex}_temp" "Database/$DBNamex/${TableNamex}_metaData"
+	mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
+    #delete from table_metaData
+    awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNameD/${TableNameD}_metaData" > "Database/$DBNameD/${TableNameD}_temp"
+    mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/${TableNameD}_metaData"
 
 
 }
-#deleteTable "MyDatabase" "kk"
-#return_num_of_Field name  "MyDatabase" "kk"
-#select_from_table Database/testdb test
+
