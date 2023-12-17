@@ -432,34 +432,40 @@ deleteTable(){
 				case $choice in
 					"Delete All Data")
                         awk  '{next;}' "Database/$DBName/${TableName}" >"Database/$DBName/${TableName}" 
+						echo "Deleted sucessfully!"
 						break
 						;;
 
 					"Delete by condition")
                         flagExist=0
+						flagNumOfArg=0
                         flagDisplayErrorMessage=0
                         while [[ "$flagExist" == 0 ]];do 
                             if [[ "$flagDisplayErrorMessage" == 1 ]];then 
                                 echo "Column Not Exist Try Again"
                             fi
-                            read -p "Enter the condition to delete(coulmnName  specific value): " columnName  value
+							if [[ "$flagNumOfArg" == 1 ]];then 
+                                echo "Multiple Agruments, Try Again"
+                            fi
+                            read -p "Enter the condition to delete(coulmnName  specific value): " columnName  value 
+							if [[ $value == *" "* ]]; then
+								flagNumOfArg=1
+								continue
+							fi
                             FieldNum=$(return_num_of_Field  $columnName  $DBNameD $TableNameD)
                             
                             Name1=($(awk -F: '{print $1}' "Database/$DBNameD/${TableNameD}_metaData"))
                             for ((l=0; l<${#Name1[@]}; l++)); do
-                                echo $columnName
-                                echo ${Name1[$l]}
                                 if [[ $columnName == ${Name1[$l]} ]];then
                                     flagExist=1
                                     break
                                 fi
                             done
-                            echo "the flage test $flagExist"
-                            echo $FieldNum
-                            echo $value
+
                             if [[ "$flagExist" == 1 ]];then 
                                 awk -F: -v fNum="$FieldNum" -v valuetest="$value" '{if($fNum == valuetest){next;} {print} }' "Database/$DBNameD/$TableNameD" > "Database/$DBNameD/${TableNameD}_temp"
                                 mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/$TableNameD"
+								echo "Deleted sucessfully!"
                             else
                                flagDisplayErrorMessage=1
                             fi 
@@ -516,6 +522,7 @@ deleteTable(){
                                 #delete from table_metaData
                                 awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNameD/${TableNameD}_metaData" > "Database/$DBNameD/${TableNameD}_temp"
                                 mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/${TableNameD}_metaData"
+								echo "Deleted sucessfully!"
 							elif [[  "$allowDeleteOrNOt" == "pk" ]];then 
 							   flagExist2=0
 							   flagDisplayErrorMessage2=0
@@ -628,6 +635,7 @@ delete_multiple_Column(){
     #delete from table_metaData
     awk -F: -v numRow="$FieldNum" 'NR != numRow' "Database/$DBNameD/${TableNameD}_metaData" > "Database/$DBNameD/${TableNameD}_temp"
     mv "Database/$DBNameD/${TableNameD}_temp" "Database/$DBNameD/${TableNameD}_metaData"
+	echo "Deleted sucessfully!"
 
 
 }
