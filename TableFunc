@@ -78,7 +78,6 @@ create_table() {
                     else
                           echo "Invalid response."
                      fi
-                    echo $oneFlag
                 done
             fi
         printf "\n">> "Database/$DBName/${modifiedTableName}_metaData"
