@@ -7,7 +7,7 @@ source TableFunc
 
 createDB() {
 	inputname=""
-	
+
 	while [[ $inputname == "" ]]
 	do
 		read -p "Enter the database name: " inputname
