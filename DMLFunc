@@ -550,7 +550,6 @@ deleteTable(){
                                 if [[ "$flagDisplayErrorMessage3" == 1 ]]; then
                                     echo "Column Not Exist Try Again"
                                 fi
-								echo "before if $allowDeleteOrNOt3"
 								if [[ "$allowDeleteOrNOt3" == "pk" ]]; then
                                     echo "Can't Remove This Column Is A Primary Key"
                                 fi
