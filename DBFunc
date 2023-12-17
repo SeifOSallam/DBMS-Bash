@@ -14,8 +14,6 @@ createDB() {
 		modifiedDBName=$(check_name "$inputname")
 		if [[ $modifiedDBName == "1" ]];then
 			printf "Invalid Database Name.\n"
-		else
-			echo $modifiedDBName
 		fi
 	done
 	if [[ ! -e Database/$modifiedDBName ]];then 
