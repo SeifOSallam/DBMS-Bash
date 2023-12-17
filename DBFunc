@@ -6,19 +6,21 @@ LC_COLLATE=C
 source TableFunc
 
 createDB() {
-	inputname=""
-	
-	while [[ $inputname == "" ]]
+	modifiedDBName="1"
+	while [[ $modifiedDBName == "1" ]]
 	do
 		read -p "Enter the database name: " inputname
-		if [[ $inputname =~ " " ]]; then
-			inputname=""
-			printf "Please enter a valid name.\n"
+		echo "Input = "$inputname
+		modifiedDBName=$(check_name "$inputname")
+		if [[ $modifiedDBName == "1" ]];then
+			printf "Invalid Database Name.\n"
+		else
+			echo $modifiedDBName
 		fi
 	done
-	if [[ ! -e Database/$inputname ]];then 
-		mkdir Database/$inputname
-		printf $inputname" Database was created successfully.\n"
+	if [[ ! -e Database/$modifiedDBName ]];then 
+		mkdir Database/$modifiedDBName
+		printf $modifiedDBName" Database was created successfully.\n"
 	else
 		echo "Database already exists!"
 	fi
