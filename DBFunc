@@ -10,7 +10,6 @@ createDB() {
 	while [[ $modifiedDBName == "1" ]]
 	do
 		read -p "Enter the database name: " inputname
-		echo "Input = "$inputname
 		modifiedDBName=$(check_name "$inputname")
 		if [[ $modifiedDBName == "1" ]];then
 			printf "Invalid Database Name.\n"
