@@ -13,7 +13,7 @@ fi
 while true
 do
 
-	select option in "Create Database" "List Database" "Connect to Database" "Drop Database"
+	select option in "Create Database" "List Database" "Connect to Database" "Drop Database" "Exit"
 	do
 		case $option in
 			"Create Database")
@@ -31,6 +31,10 @@ do
 			"Drop Database")
 				dropDB
 				break
+				;;
+			"Exit")
+				echo "Thanks for using our DBMS!"
+				exit 0
 				;;
 			*)
 				echo $REPLY is not one of the choices.
